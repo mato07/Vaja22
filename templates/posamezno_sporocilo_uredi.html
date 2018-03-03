@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+{# Dodatna domača naloga: naj se stran prikaže malo lepše #}
+<h1>Sporočilo</h1>
+<form method="POST">
+    <input type="text" value="{{sporocilo.besedilo}}" name="nov-text">
+    <p>{{sporocilo.nastanek}}</p>
+    <p>{{sporocilo.key.id()}}</p>
+    <button type="submit">Shrani</button>
+</form>
+</body>
+</html>

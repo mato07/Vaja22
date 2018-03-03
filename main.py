@@ -45,7 +45,7 @@ class RezultatHandler(BaseHandler):
 class ListHandler(BaseHandler):
     def get(self):
         # Iz baze vzamemo vsa sporocila
-        seznam = Sporocilo.query().fetch()
+        seznam = Sporocilo.query(Sporocilo.izbrisano == False).fetch() # pokaze samo sporocila ki niso skrita (metoda izbrisano = False)
         params = {"seznam": seznam}
         return self.render_template("seznam.html", params=params)
 
@@ -58,13 +58,43 @@ class PosameznoSporociloHandler(BaseHandler):
         params = {"sporocilo": sporocilo}
         return self.render_template("posamezno_sporocilo.html", params=params)
 
+class UrediHandler(BaseHandler):
+    def get(self, sporocilo_id):
+        # Iz baze vzamemo sporocilo, katerega id je enak podanemu
+        sporocilo = Sporocilo.get_by_id(int(sporocilo_id))
+
+        params = {"sporocilo": sporocilo}
+        return self.render_template("posamezno_sporocilo_uredi.html", params=params)
+
+    def post(self, sporocilo_id): # to metodo naredimo zaradi shrani gumba
+        sporocilo = Sporocilo.get_by_id(int(sporocilo_id)) # potegnemo staro sporocilo iz baze
+        sporocilo.besedilo = self.request.get("nov-text")
+        sporocilo.put()
+        return self.redirect_to("seznam-sporocil")
+
+class DeleteHandler(BaseHandler):
+    def get(self, sporocilo_id):
+        # Iz baze vzamemo sporocilo, katerega id je enak podanemu
+        sporocilo = Sporocilo.get_by_id(int(sporocilo_id))
+
+        params = {"sporocilo": sporocilo}
+        return self.render_template("posamezno_sporocilo_izbrisi.html", params=params)
+
+    def post(self, sporocilo_id):
+        sporocilo = Sporocilo.get_by_id(int(sporocilo_id))  # potegnemo staro sporocilo iz baze
+        # sporocilo.key.delete()  to dejansko izbrise
+        sporocilo.izbrisano = True # to pa samo skrije
+        sporocilo.put()
+        return self.redirect_to("seznam-sporocil")
 
 app = webapp2.WSGIApplication([
     webapp2.Route('/', MainHandler),
     webapp2.Route('/rezultat', RezultatHandler),
-    webapp2.Route('/seznam', ListHandler),
+    webapp2.Route('/seznam', ListHandler, name="seznam-sporocil"), # ime da lahko redirectamo
     # Na to pot primejo linki oblike /sporocilo/{{poljubne stevke}}
     # sporocilo_id pa je zgolj poimenovanje, ki ga potem uporabimo v metodi,
     # ki se klice ob prihodu na to pot
-    webapp2.Route('/sporocilo/<sporocilo_id:\d+>', PosameznoSporociloHandler)
+    webapp2.Route('/sporocilo/<sporocilo_id:\d+>', PosameznoSporociloHandler),
+    webapp2.Route('/sporocilo/<sporocilo_id:\d+>/edit', UrediHandler),
+    webapp2.Route('/sporocilo/<sporocilo_id:\d+>/delete', DeleteHandler),
 ], debug=True)
