@@ -4,6 +4,7 @@ import jinja2
 import webapp2
 
 from models import Sporocilo
+from google.appengine.api import users # googlaj google.appengine.api user
 
 template_dir = os.path.join(os.path.dirname(__file__), "templates")
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir), autoescape=True)
@@ -30,22 +31,36 @@ class BaseHandler(webapp2.RequestHandler):
 
 class MainHandler(BaseHandler):
     def get(self):
-        return self.render_template("hello.html")
+
+        user = users.get_current_user()
+        if user:
+            logout_url = users.create_logout_url("/")
+            logiran = True
+            podatki = {"logout_url": logout_url, "logiran": logiran, "user": user}
+        else:
+            login_url = users.create_login_url("/")
+            logiran = False
+            podatki = {"login_url": login_url, "logiran": logiran}
+
+        return self.render_template("hello.html", params=podatki)
 
 
 class RezultatHandler(BaseHandler):
     def post(self):
+        user = users.get_current_user()
         rezultat = self.request.get("input-sporocilo")
+        eprejemnik = self.request.get("prejemnik")
 
-        sporocilo = Sporocilo(besedilo=rezultat)
+        sporocilo = Sporocilo(besedilo=rezultat, prejemnik=eprejemnik, email=user.email())
         sporocilo.put()
         return self.write(rezultat)
 
 
 class ListHandler(BaseHandler):
     def get(self):
+        user = users.get_current_user()
         # Iz baze vzamemo vsa sporocila
-        seznam = Sporocilo.query(Sporocilo.izbrisano == False).fetch() # pokaze samo sporocila ki niso skrita (metoda izbrisano = False)
+        seznam = Sporocilo.query(Sporocilo.izbrisano == False).filter(Sporocilo.email == user.email()).fetch()
         params = {"seznam": seznam}
         return self.render_template("seznam.html", params=params)
 

@@ -7,11 +7,21 @@
     <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>
+{% if logiran %}
+<p>Pozdravljen {{ user.email() }}, {{ user.nickname() }}</p>
 <h1>Hello, SmartNinja!</h1>
 <form method="POST" action="/rezultat">
-    <label for="sporocilo">Vpiši svoje sporočilo</label>
-    <input type="text" id="sporocilo" name="input-sporocilo">
+    <label for="sporocilo">Vpiši svoje sporočilo: </label>
+    <input type="text" id="sporocilo" name="input-sporocilo"><br>
+    <label for="poslanec">Vpiši email prejemnika: </label>
+    <input type="email" id="poslanec" name="prejemnik"><br>
     <button type="submit">Pošlji</button>
 </form>
+<a href="{{ logout_url }}">Odjava</a><br>
+<a href="/seznam">Seznam sporocil</a><br>
+{% else %}
+    <p>Nisi prijavljen</p>
+    <a href="{{ login_url }}">Prijava</a>
+{% endif %}
 </body>
 </html>
